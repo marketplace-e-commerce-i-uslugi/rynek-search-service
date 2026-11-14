@@ -4,6 +4,39 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  datasource:
+    # Lokalnie: rynek-infra/local (docker compose). Inne środowiska ustawiają zmienne.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/search}
+    username: ${DB_USER:search}
+    password: ${DB_PASSWORD:search}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schemat zakłada Flyway (db/migration); Hibernate tylko sprawdza zgodność encji.
+      ddl-auto: validate
+
+rynek:
+  identity:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+  catalog:
+    url: ${CATALOG_SERVICE_URL:http://localhost:8083}
+  channel:
+    url: ${CHANNEL_SERVICE_URL:http://localhost:8082}
+  opensearch:
+    url: ${OPENSEARCH_URL:http://localhost:9200}
+  search:
+    # Zmiany ofert z catalog pobieramy co tyle czasu (synchronizacja przyrostowa zamiast zdarzeń offer.*).
+    sync-interval: 15s
+    # Pełne przebudowanie indeksów: odświeża oceny i liczby obserwujących oraz usuwa to, czego catalog już nie zna.
+    reindex-interval: 10m
+    # Wyłącza synchronizację w tle (testy); ręczna reindeksacja przez POST /internal/search/reindex działa zawsze.
+    sync-enabled: true
+    # Tyle wyników na stronę.
+    page-size: 20
+  jwt:
+    # Klucze publiczne pobierane leniwie przy pierwszym tokenie, więc serwis startuje bez działającego identity.
+    jwk-set-uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}/internal/auth/jwks
+    issuer: ${JWT_ISSUER:rynek-identity}
 
 server:
   port: ${PORT:8087}

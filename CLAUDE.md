@@ -2,7 +2,7 @@
 
 Mikroserwis platformy **Rynek**: `search-service` — wyszukiwarka i filtry
 
-Zakres, endpointy i zdarzenia są opisane w `README.md`. Na razie to szkielet: endpointy zwracają 501, DTO są puste. Nie dodawaj logiki bez wyraźnej prośby.
+Zakres, endpointy i zdarzenia są opisane w `README.md`. Wyszukiwarka działa (OpenSearch przez zwykły REST, bez biblioteki klienckiej; PostgreSQL na historię i zapisane wyszukiwania). Indeks budują zmiany pobierane z catalog i channel, a nie zdarzenia. Kafki ani powiadomień o nowych ofertach dla zapisanych wyszukiwań nie ma: nie dodawaj ich bez wyraźnej prośby.
 
 ## Wspólne konwencje API (§1 dokumentu architektury)
 
@@ -24,7 +24,7 @@ Legenda kolumny **Dostęp**: `pub` = bez logowania, `user` = zalogowany, `seller
 ## Stack
 
 - Java 25, Spring Boot 4.1 (Maven, `./mvnw`)
-- Dane: Elasticsearch/OpenSearch
+- Dane: OpenSearch (indeks) i PostgreSQL (Flyway; historia, zapisane wyszukiwania); testy na Testcontainers
 - Zdarzenia: Kafka, nazwy `domena.zdarzenie`
 
 ## Powiązane repozytoria
@@ -35,6 +35,6 @@ Legenda kolumny **Dostęp**: `pub` = bez logowania, `user` = zalogowany, `seller
 
 ## Struktura kodu
 
-- `pl.rynek.search.api`: kontrolery REST (pełne ścieżki w adnotacjach), `api.dto`: rekordy żądań, `common.NotImplemented`: odpowiedź 501
+- `pl.rynek.search.api`: kontrolery REST (pełne ścieżki w adnotacjach), `api.dto`: odpowiedzi i żądania; `index`: `OpenSearch` (klient REST), `Mappings`, `Docs`, `Cities` (tablica miast); `query`: filtry, budowa zapytania, `SearchService`; `sync`: klienci catalog i channel, `IndexSync` (przyrost, reindeksacja); `history`, `saved`: PostgreSQL; `config`: security (JWT z JWKS), błędy RFC 7807 po polsku
 - Konfiguracja: `src/main/resources/application.yml`
 - Port lokalny: 8087
