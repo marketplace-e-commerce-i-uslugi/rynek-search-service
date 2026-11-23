@@ -200,6 +200,12 @@ class SearchFlowTests {
         sync.reindex();
         String first = titles("?q=rower").andExpect(jsonPath("$.items", hasSize(20))).andExpect(jsonPath("$.total").value(22))
                 .andExpect(jsonPath("$.nextCursor").isNotEmpty()).andReturn().getResponse().getContentAsString();
+        // Własny rozmiar strony (1–50); poza zakresem to 400.
+        titles("?q=rower&limit=5").andExpect(status().isOk()).andExpect(jsonPath("$.items", hasSize(5))).andExpect(jsonPath("$.nextCursor").isNotEmpty());
+        titles("?q=rower&limit=50").andExpect(status().isOk()).andExpect(jsonPath("$.items", hasSize(22))).andExpect(jsonPath("$.nextCursor").value(nullValue()));
+        titles("?q=rower&limit=0").andExpect(status().isBadRequest());
+        titles("?q=rower&limit=51").andExpect(status().isBadRequest());
+        titles("?q=rower&limit=abc").andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value("Nieprawidłowa wartość parametru „limit”."));
         String cursor = JsonPath.read(first, "$.nextCursor");
         String second = titles("?q=rower&cursor=" + cursor).andExpect(jsonPath("$.items", hasSize(2))).andExpect(jsonPath("$.nextCursor").value(nullValue()))
                 .andReturn().getResponse().getContentAsString();

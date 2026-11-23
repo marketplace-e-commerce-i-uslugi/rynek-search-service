@@ -29,6 +29,8 @@ public class SearchService {
 
     private final OpenSearch search;
     private final JsonMapper json;
+    static final int MAX_PAGE_SIZE = 50;
+
     private final int pageSize;
 
     public SearchService(OpenSearch search, JsonMapper json, @Value("${rynek.search.page-size:20}") int pageSize) {
@@ -38,6 +40,15 @@ public class SearchService {
     }
 
     public SearchResult offers(OfferFilters raw) {
+        return offers(raw, null);
+    }
+
+    /** {@code limit}: wyników na stronę, od 1 do {@link #MAX_PAGE_SIZE}; brak oznacza domyślny rozmiar strony. */
+    public SearchResult offers(OfferFilters raw, Integer limit) {
+        if (limit != null && (limit < 1 || limit > MAX_PAGE_SIZE)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Limit wyników to liczba od 1 do " + MAX_PAGE_SIZE + ".");
+        }
+        int pageSize = limit == null ? this.pageSize : limit;
         OfferFilters filters = raw.normalized();
         // Pobieramy o jeden wynik więcej: jeśli jest, istnieje następna strona.
         Map<String, Object> response = search.search(IndexSync.OFFERS, OfferQuery.build(filters, pageSize + 1, decode(filters.cursor())));

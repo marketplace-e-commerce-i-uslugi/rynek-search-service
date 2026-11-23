@@ -47,7 +47,7 @@ public class SearchController {
 
     /**
      * Wyniki z licznikami filtrów ({@code facets}) i liczbą wszystkich ({@code total}). Ceny {@code priceMin}/{@code priceMax}
-     * w złotych. Zalogowanemu zapytanie ({@code q}) trafia do historii (tylko pierwsza strona).
+     * w złotych. {@code limit}: liczba wyników na stronę (1–50, domyślnie 20). Zalogowanemu zapytanie ({@code q}) trafia do historii (tylko pierwsza strona).
      */
     @GetMapping("/api/v1/search/offers")
     public SearchResult searchOffers(HttpServletRequest request, @RequestParam(required = false) String q,
@@ -56,9 +56,9 @@ public class SearchController {
                                      @RequestParam(required = false) String city, @RequestParam(required = false) Integer radiusKm,
                                      @RequestParam(required = false) String condition, @RequestParam(required = false) Double minRating,
                                      @RequestParam(required = false) Boolean hasVideo, @RequestParam(required = false) String sort,
-                                     @RequestParam(required = false) String cursor) {
+                                     @RequestParam(required = false) String cursor, @RequestParam(required = false) Integer limit) {
         OfferFilters filters = new OfferFilters(q, category, type, priceMin, priceMax, city, radiusKm, condition, minRating, hasVideo, sort, cursor);
-        SearchResult result = search.offers(filters);
+        SearchResult result = search.offers(filters, limit);
         if (cursor == null || cursor.isBlank()) {
             viewer.of(request).ifPresent(user -> history.record(user, q));
         }
